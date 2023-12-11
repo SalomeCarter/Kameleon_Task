@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +30,7 @@ public class User {
 
     @Column(name = "creation_date")
     private LocalDateTime creationDate;
+
 
 }
 

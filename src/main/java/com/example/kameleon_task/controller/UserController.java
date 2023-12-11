@@ -1,10 +1,10 @@
 package com.example.kameleon_task.controller;
 
+import com.example.kameleon_task.config.JwtTokenGenerator;
 import com.example.kameleon_task.dto.LoginUserDto;
 import com.example.kameleon_task.dto.RegUserDto;
 import com.example.kameleon_task.entity.SessionUser;
 import com.example.kameleon_task.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,12 +17,14 @@ import java.util.Optional;
 
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtTokenGenerator jwtTokenGenerator;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegUserDto regUserDto,
@@ -40,16 +42,16 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginUserDto loginUserDto,
-                                   BindingResult bindingResult,
-                                   HttpSession httpSession) {
+                                   BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body("Invalid login data");
         }
 
         Optional<SessionUser> sessionUser = userService.login(loginUserDto);
         if (sessionUser.isPresent()) {
-            httpSession.setAttribute("sessionUser", sessionUser.get());
-            return ResponseEntity.ok("Login successful");
+            SessionUser user = sessionUser.get();
+            String token = jwtTokenGenerator.generateToken(user.getId(), user.getEmail());
+            return ResponseEntity.ok(token);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Email or password is invalid, please try again");
@@ -57,9 +59,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession httpSession) {
-        httpSession.invalidate();
+    public ResponseEntity<?> logout() {
         return ResponseEntity.ok("Logout successful");
     }
-
 }

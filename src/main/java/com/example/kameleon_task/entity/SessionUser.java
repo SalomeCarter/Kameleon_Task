@@ -12,4 +12,3 @@ public class SessionUser {
     private String email;
 
 }
-
